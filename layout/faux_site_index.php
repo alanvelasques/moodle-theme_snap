@@ -75,6 +75,13 @@ foreach (explode(',', $frontpagelayout) as $section) {
                     array('href' => '#skipmycourses', 'class' => 'skip-block')
                 );
 
+                //insert Easy enroll plugin
+                $enrolform = '';
+                $plugin = enrol_get_plugin('easy');
+                if ($plugin && !isguestuser()) {
+                    echo $plugin->get_form();
+                }
+
                 // Wrap frontpage course list in div container.
                 echo html_writer::start_tag('div', array('id' => 'frontpage-course-list'));
 
