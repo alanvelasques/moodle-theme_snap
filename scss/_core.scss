@@ -148,7 +148,7 @@ table.boxwidthwide {
 
     .collapsible-actions,
     .ftoggler {
-        display: none;
+        display: block;
     }
     // Inputs to full width.
     .mform .form-inline .form-control,
@@ -1110,19 +1110,6 @@ header#page-header
     display: block;
     li.breadcrumb-item {
         display: inline-block;
-    }
-}
-
-@include media-breakpoint-down(md) {
-    .breadcrumb li {
-        &:nth-last-child(n+4) {
-            display: none;
-        }
-
-        &:nth-last-child(3):before {
-            content: "";
-            padding: 0;
-        }
     }
 }
 

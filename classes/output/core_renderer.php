@@ -137,7 +137,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         global $OUTPUT;
         $text = get_string($langstring, 'theme_snap');
         $iconurl = $OUTPUT->image_url($iconname, 'theme');
-        $icon = '<img class="svg-icon" role="presentation" src="' .$iconurl. '">';
+        $icon = '<img class="svg-icon" role="presentation" src="' .$iconurl. '" alt="">';
         $link = '<a class="snap-personal-menu-more" href="' .$url. '"><small>' .$text. '</small>' .$icon. '</a>';
         return $link;
     }
@@ -603,9 +603,12 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $picture = $this->render($userpicture);
 
         // User name and link to profile.
+        // To the DOM structure, only one H1 can exists in it, so this link
+        // can not act as a header, so no role="heading" attribute can be
+        // assigned to it.
         $fullnamelink = '<a href="' .s($CFG->wwwroot). '/user/profile.php"
                     title="' .s(get_string('viewyourprofile', 'theme_snap')). '"
-                    class="h1" role="heading" aria-level="1">'
+                    class="h1" aria-level="1" id="snap-pm-user-profile">'
                     .format_string(fullname($USER)). '</a>';
 
         // Real user when logged in as.
@@ -617,18 +620,22 @@ class core_renderer extends \theme_boost\output\core_renderer {
 
         // User quicklinks.
         $profilelink = [
+            'id' => 'snap-pm-profile',
             'link' => s($CFG->wwwroot). '/user/profile.php',
             'title' => get_string('profile')
         ];
         $dashboardlink = [
+            'id' => 'snap-pm-dashboard',
             'link' => s($CFG->wwwroot). '/my',
             'title' => get_string('myhome')
         ];
         $gradelink = [
+            'id' => 'snap-pm-grades',
             'link' => s($CFG->wwwroot). '/grade/report/overview/index.php',
             'title' => get_string('grades')
         ];
         $preferenceslink = [
+            'id' => 'snap-pm-preferences',
             'link' => s($CFG->wwwroot). '/user/preferences.php',
             'title' => get_string('preferences')
         ];
@@ -1126,6 +1133,11 @@ HTML;
 
         // Add theme-snap class so modules can customise css for snap.
         $classes[] = 'theme-snap';
+
+        if (get_config('theme_snap', 'coursepartialrender') && get_config('theme_snap', 'leftnav') == 'top'
+            && $COURSE->format == 'topics') {
+            $classes[] = 'no-number-toc';
+        }
 
         if (!empty($CFG->allowcategorythemes)) {
             // This duplicates code triggered by allowcategorythemes, so no
@@ -1763,9 +1775,10 @@ HTML;
         $breadcrumbs = '';
         $courseitem = null;
         $attr['class'] = 'js-snap-pm-trigger';
-
+        $attrs['class'] = '';
         if (!empty($coverimage)) {
             $attr['class'] .= ' mast-breadcrumb';
+            $attrs['class'] .= ' mast-breadcrumb';
         }
         $snapmycourses = html_writer::link('#', get_string('menu', 'theme_snap'), $attr);
 
@@ -1777,16 +1790,18 @@ HTML;
                 continue;
             }
 
-            // For Admin users - When default home is set to dashboard, let admin access the site home page.
-            if ($item->key === 'myhome' && has_capability('moodle/site:config', context_system::instance())) {
+            // Add Breadcrumb links to all users types.
+            if ($item->key === 'myhome') {
                 $breadcrumbs .= '<li class="breadcrumb-item">';
-                $breadcrumbs .= html_writer::link(new moodle_url('/', ['redirect' => 0]), get_string('sitehome'));
+                $breadcrumbs .= html_writer::link(new moodle_url('/my'), get_string($item->key), $attrs);
                 $breadcrumbs .= '</li>';
                 continue;
             }
 
-            // Remove link to home/dashboard as site name/logo provides the same link.
-            if ($item->key === 'home' || $item->key === 'myhome' || $item->key === 'dashboard') {
+            if ($item->key === 'home') {
+                $breadcrumbs .= '<li class="breadcrumb-item">';
+                $breadcrumbs .= html_writer::link(new moodle_url('/'), get_string($item->key), $attrs);
+                $breadcrumbs .= '</li>';
                 continue;
             }
 

@@ -725,17 +725,22 @@ class course_renderer extends \core_course_renderer {
         $readmore = get_string('readmore', 'theme_snap');
         $close = get_string('closebuttontitle', 'moodle');
 
-        // Identify content elements which should force an AJAX lazy load.
-        $elcontentblist = ['iframe', 'video', 'object', 'embed'];
-        $content = $page->content;
-        $lazyload = false;
-        foreach ($elcontentblist as $el) {
-            if (stripos($content, '<'.$el) !== false) {
-                $content = ''; // Don't include the content as it is likely to slow the page load down considerably.
-                $lazyload = true;
+        $content = '';
+        $contentloaded = 0;
+        if (empty(get_config('theme_snap', 'lazyload_mod_page'))) {
+            // Identify content elements which should force an AJAX lazy load.
+            $elcontentblist = ['iframe', 'video', 'object', 'embed', 'model-viewer'];
+            $content = $page->content;
+            $lazyload = false;
+            foreach ($elcontentblist as $el) {
+                if (stripos($content, '<'.$el) !== false) {
+                    $content = ''; // Don't include the content as it is likely to slow the page load down considerably.
+                    $lazyload = true;
+                }
             }
+            $contentloaded = !$lazyload ? 1 : 0;
         }
-        $contentloaded = !$lazyload ? 1 : 0;
+
         $pslinkclass = 'btn btn-secondary pagemod-readmore';
         $pmcontextattribute = 'data-pagemodcontext="'.$mod->context->id.'"';
 
@@ -1169,8 +1174,8 @@ class course_renderer extends \core_course_renderer {
             if (empty($courseteachers)) {
                 $courseteachers = "<h5>".get_string('coursecontacts', 'theme_snap')."</h5>";
             }
-            $courseteachers .= '<br><a class="btn btn-outline-secondary btn-sm" href="'.$CFG->wwwroot.'/user/index.php?id='.
-                $COURSE->id.'">'.get_string('enrolledusers', 'enrol').'</a>';
+            $courseteachers .= '<br><a id="enrolled-users" class="btn btn-outline-secondary btn-sm"
+                href="'.$CFG->wwwroot.'/user/index.php?id='.$COURSE->id.'">'.get_string('enrolledusers', 'enrol').'</a>';
         }
 
         // Course cummary.
@@ -1191,8 +1196,8 @@ class course_renderer extends \core_course_renderer {
             if (empty($coursesummary)) {
                 $coursesummary = '<h5>'.get_string('aboutcourse', 'theme_snap').'</h5>';
             }
-            $coursesummary .= '<br><a class="btn btn-outline-secondary btn-sm" href="'.$CFG->wwwroot.'/course/edit.php?id='.
-                $COURSE->id.'#id_descriptionhdr">'.get_string('editsummary').'</a>';
+            $coursesummary .= '<br><a id="edit-summary" class="btn btn-outline-secondary btn-sm"
+            href="'.$CFG->wwwroot.'/course/edit.php?id='.$COURSE->id.'#id_descriptionhdr">'.get_string('editsummary').'</a>';
         }
 
         // Get recent activities on mods in the course.
@@ -1245,7 +1250,7 @@ class course_renderer extends \core_course_renderer {
      * @return string
      */
     public function print_teacher_profile($user) {
-        global $CFG, $OUTPUT;
+        global $CFG, $OUTPUT, $USER;
 
         $userpicture = new \user_picture($user);
         $userpicture->link = false;
@@ -1254,14 +1259,17 @@ class course_renderer extends \core_course_renderer {
         $picture = $this->render($userpicture);
 
         $fullname = '<a href="' .$CFG->wwwroot. '/user/profile.php?id=' .$user->id. '">'.format_string(fullname($user)).'</a>';
-        $messageicon = '<img class="svg-icon" alt="" role="presentation" src="' .$OUTPUT->image_url('messages', 'theme').' ">';
-        $message = '<br><small><a href="'.$CFG->wwwroot.
-                '/message/index.php?id='.$user->id.'">message'.$messageicon.'</a></small>';
-
         $data = (object) [
             'image' => $picture,
-            'content' => $fullname.$message
+            'content' => $fullname
         ];
+        if ($USER->id != $user->id) {
+            $messageicon = '<img class="svg-icon" alt="" role="presentation" src="'
+                .$OUTPUT->image_url('messages', 'theme').' ">';
+            $message = '<br><small><a href="'.$CFG->wwwroot.
+                '/message/index.php?id='.$user->id.'">message'.$messageicon.'</a></small>';
+            $data->content .= $message;
+        }
 
         return $this->render_from_template('theme_snap/media_object', $data);
     }

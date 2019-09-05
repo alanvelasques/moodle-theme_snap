@@ -373,7 +373,8 @@ EOF;
             'unavailablemods' => $unavailablemods,
             'enablecompletion' => isloggedin() && $COURSE->enablecompletion,
             'format' => $COURSE->format,
-            'partialrender' => !empty(get_config('theme_snap', 'coursepartialrender')) ? true : false
+            'partialrender' => !empty(get_config('theme_snap', 'coursepartialrender')) ? true : false,
+            'toctype' => get_config('theme_snap', 'leftnav')
         ];
 
         $mprocs = get_message_processors(true);
@@ -435,10 +436,17 @@ EOF;
         $gradingconstants['gradepercentage'] = GRADE_DISPLAY_TYPE_PERCENTAGE;
         $gradingconstants['gradepercentagereal'] = GRADE_DISPLAY_TYPE_PERCENTAGE_REAL;
         $gradingconstants['gradepercentageletter'] = GRADE_DISPLAY_TYPE_PERCENTAGE_LETTER;
+        $localplugins = core_component::get_plugin_list('local');
+        // Check if the plugins are installed to pass them as parameters to accessibility.js AMD module.
+        $localjoulegrader = array_key_exists('joulegrader', $localplugins);
+        $blockreports = array_key_exists('reports', core_component::get_plugin_list('block'));
+        $allyreport = (\core_component::get_component_directory('report_allylti') !== null);
         $initvars = [$coursevars, $pagehascoursecontent, get_max_upload_file_size($CFG->maxbytes), $forcepwdchange,
                      $conversationbadgecountenabled, $userid, $sitepolicyacceptreqd, $inalternativerole, $brandcolors,
                      $gradingconstants];
+        $initaxvars = [$localjoulegrader, $allyreport, $blockreports];
         $PAGE->requires->js_call_amd('theme_snap/snap', 'snapInit', $initvars);
+        $PAGE->requires->js_call_amd('theme_snap/accessibility', 'snapAxInit', $initaxvars);
         if (!empty($CFG->calendar_adminseesall) && is_siteadmin()) {
             $PAGE->requires->js_call_amd('theme_snap/adminevents', 'init');
         }
@@ -749,9 +757,13 @@ EOF;
             }
         }
 
+        $config = get_config('tool_ally');
+        $configured = !empty($config) && !empty($config->key) && !empty($config->adminurl) && !empty($config->secret);
+        $runningbehattest = defined('BEHAT_SITE_RUNNING') && BEHAT_SITE_RUNNING;
+        $configured = $configured || $runningbehattest;
+
         if ( \core_component::get_component_directory('report_allylti') !== null &&
-            $COURSE->id != SITEID && has_capability('report/allylti:viewcoursereport', $coursecontext)
-        ) {
+            $COURSE->id != SITEID && has_capability('report/allylti:viewcoursereport', $coursecontext) && $configured) {
 
             $url = new moodle_url('/report/allylti/launch.php', [
                     'reporttype' => 'course',

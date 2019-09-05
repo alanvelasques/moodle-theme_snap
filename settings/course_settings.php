@@ -49,13 +49,19 @@ $default = $checked;
 $setting = new admin_setting_configcheckbox($name, $title, $description, $default, $checked, $unchecked);
 $snapsettings->add($setting);
 
-
 // Course web service for sections.
 $name = 'theme_snap/coursepartialrender';
 $title = new lang_string('coursepartialrender', 'theme_snap');
 $description = new lang_string('coursepartialrenderdesc', 'theme_snap');
 $default = $unchecked;
 $setting = new admin_setting_configcheckbox($name, $title, $description, $default, $checked, $unchecked);
+$snapsettings->add($setting);
+
+// Lazy loading for pages.
+$name = 'theme_snap/lazyload_mod_page';
+$title = get_string('lazyload_mod_page', 'theme_snap');
+$description = get_string('lazyload_mod_page_description', 'theme_snap');
+$setting = new admin_setting_configcheckbox($name, $title, $description, 1);
 $snapsettings->add($setting);
 
 $settings->add($snapsettings);
