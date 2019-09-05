@@ -74,6 +74,14 @@ if ($COURSE->id != SITEID && !empty($coverimagecss)) {
 
 <section id="region-main">
 <?php
+
+//insert Easy enroll plugin
+$enrolform = '';
+$plugin = enrol_get_plugin('easy');
+if ($plugin && !isguestuser()) {
+    echo $plugin->get_form();
+}
+
 echo $OUTPUT->course_content_header();
 
 // Ensure edit blocks button is only shown for appropriate pages.
