@@ -14159,3 +14159,12 @@ body {
     height: auto;
     width: auto;
 }
+
+.easyenrol {
+    text-align: center;
+}
+
+form#enrolform_easy {
+    text-align: center;
+    display: inline-flex;
+}

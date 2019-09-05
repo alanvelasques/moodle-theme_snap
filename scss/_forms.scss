@@ -514,7 +514,7 @@ form.mform {
 }
 
 @include media-breakpoint-down(lg) {
-    
+
     .snap-form-advanced {
         select {
             max-width: 140px !important;
@@ -554,4 +554,13 @@ form.mform {
             display: block;
         }
     }
+}
+
+.easyenrol {
+    text-align: center;
+}
+
+form#enrolform_easy {
+    text-align: center;
+    display: inline-flex;
 }
